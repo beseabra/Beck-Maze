@@ -158,7 +158,7 @@ h1{
     <h2>Você encontrou o beck 😶‍🌫️✨</h2>
 
     <p class="msg">
-      …será que agora eu consigo encontrar <b>você</b>?
+      …será que agora eu consigo encontrar <b>você</b>?<br>
       Se quiser continuar essa aventura comigo…<br>
       me chama aqui 😳🌿✨
     </p>
@@ -231,14 +231,42 @@ function drawGoal(ctx,x,y,s){
   ctx.restore();
 }
 
-/* Fumacinha */
-function drawSmoke(ctx,x,y){
-  ctx.globalAlpha=0.55;
-  ctx.fillStyle="#e9fff6";
-  ctx.beginPath();
-  ctx.arc(x,y,5,0,Math.PI*2);
-  ctx.fill();
-  ctx.globalAlpha=1;
+/* === Sistema de partículas de fumacinha === */
+let smokeParticles = [];
+
+function spawnSmokeParticle() {
+  smokeParticles.push({
+    x: player.x,
+    y: player.y - 25,
+    r: 4 + Math.random() * 4,
+    alpha: 0.5 + Math.random() * 0.3,
+    vx: (Math.random() - 0.5) * 0.2,
+    vy: -0.3 - Math.random() * 0.3
+  });
+}
+
+function updateSmoke() {
+  for (let i = smokeParticles.length - 1; i >= 0; i--) {
+    let p = smokeParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.alpha -= 0.01;
+
+    if (p.alpha <= 0) {
+      smokeParticles.splice(i, 1);
+    }
+  }
+}
+
+function drawSmokeParticles() {
+  for (let p of smokeParticles) {
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = "#d9d9d9";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 }
 
 /* ==== Labirinto ==== */
@@ -336,11 +364,9 @@ function draw(){
     cellSize*0.9
   );
 
-  drawPlayer(ctx,
-    player.x,player.y,cellSize*0.9
-  );
+  drawSmokeParticles();
 
-  drawSmoke(ctx,player.x,player.y-20);
+  drawPlayer(ctx, player.x, player.y, cellSize * 0.9);
 }
 
 /* ==== Movimento ==== */
@@ -361,15 +387,6 @@ function move(dir){
   player.y=player.j*cellSize+cellSize/2;
 
   stepsEl.textContent=parseInt(stepsEl.textContent)+1;
-
-  draw();
-
-  if(player.i===goal.i && player.j===goal.j){
-    /* PING SECRETO — finalizou */
-    new Image().src = "/api/ping?finalizou=1";
-
-    modal.classList.remove("hidden");
-  }
 }
 
 /* ==== Botões ==== */
@@ -381,19 +398,27 @@ document.querySelectorAll("[data-dir]").forEach(btn=>{
 
 /* ==== Jogar novamente ==== */
 document.getElementById("retry").onclick=()=>{
-  /* PING — clicou jogar de novo */
+
   new Image().src = "/api/ping?again=1";
 
   modal.classList.add("hidden");
   init();
 };
 
+/* ==== Loop contínuo ==== */
+function loop(){
+  spawnSmokeParticle();
+  updateSmoke();
+  draw();
+  requestAnimationFrame(loop);
+}
+
 function init(){
   generateMaze();
-  draw();
 }
 
 init();
+loop();
 </script>
 
 </body>
