@@ -31,7 +31,6 @@ h1{
   font-size:14px;
 }
 
-/* Canvas menor */
 #cv{
   background:white;
   border-radius:20px;
@@ -52,7 +51,6 @@ h1{
   color:#4f826b;
 }
 
-/* D-pad menor */
 .dpad{
   width:140px;
   height:140px;
@@ -78,7 +76,6 @@ h1{
   background:#9fe9bf;
 }
 
-/* Modal */
 .modal{
   position:fixed;
   inset:0;
@@ -118,7 +115,6 @@ h1{
   line-height:1.4;
 }
 
-/* Botões */
 .btn{
   display:block;
   width:100%;
@@ -163,7 +159,6 @@ h1{
       me chama aqui 😳🌿✨
     </p>
 
-    <!-- BOTÃO DO WHATSAPP -->
     <a href="https://wa.me/5543999898143" target="_blank" style="text-decoration:none;">
       <button class="btn" style="background:#98edbc;">📩 Falar comigo no WhatsApp</button>
     </a>
@@ -174,7 +169,7 @@ h1{
 </div>
 
 <script>
-/* ==== Baseado ==== */
+/* ======= DESENHO DO JOGADOR ======= */
 function drawPlayer(ctx,x,y,s){
   ctx.save();
   ctx.translate(x,y);
@@ -212,7 +207,7 @@ function drawPlayer(ctx,x,y,s){
   ctx.restore();
 }
 
-/* ==== Beck Final ==== */
+/* ======= BECK FINAL ======= */
 function drawGoal(ctx,x,y,s){
   ctx.save();
   ctx.translate(x,y);
@@ -231,7 +226,7 @@ function drawGoal(ctx,x,y,s){
   ctx.restore();
 }
 
-/* === Sistema de partículas de fumacinha === */
+/* ======= FUMAÇA ======= */
 let smokeParticles = [];
 
 function spawnSmokeParticle() {
@@ -239,7 +234,7 @@ function spawnSmokeParticle() {
     x: player.x,
     y: player.y - 25,
     r: 4 + Math.random() * 4,
-    alpha: 0.5 + Math.random() * 0.3,
+    alpha: 0.7 + Math.random() * 0.3,
     vx: (Math.random() - 0.5) * 0.2,
     vy: -0.3 - Math.random() * 0.3
   });
@@ -252,16 +247,14 @@ function updateSmoke() {
     p.y += p.vy;
     p.alpha -= 0.01;
 
-    if (p.alpha <= 0) {
-      smokeParticles.splice(i, 1);
-    }
+    if (p.alpha <= 0) smokeParticles.splice(i, 1);
   }
 }
 
 function drawSmokeParticles() {
   for (let p of smokeParticles) {
     ctx.globalAlpha = p.alpha;
-    ctx.fillStyle = "#d9d9d9";
+    ctx.fillStyle = "#d9d9d9"; /* cinza clarinho */
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
     ctx.fill();
@@ -269,7 +262,7 @@ function drawSmokeParticles() {
   ctx.globalAlpha = 1;
 }
 
-/* ==== Labirinto ==== */
+/* ======= LABIRINTO ======= */
 const cv=document.getElementById("cv");
 const ctx=cv.getContext("2d");
 const stepsEl=document.getElementById("steps");
@@ -314,7 +307,6 @@ function removeWalls(a,b){
   if(dy===-1){a.w[2]=false; b.w[0]=false;}
 }
 
-/* ==== Gerar labirinto ==== */
 function generateMaze(){
   grid=[];
   for(let j=0;j<rows;j++)
@@ -323,9 +315,9 @@ function generateMaze(){
 
   let cur=grid[0];
   cur.v=true;
-  let stack=[], visited=1, total=cols*rows;
+  let stack=[], visited=1;
 
-  while(visited<total){
+  while(visited<cols*rows){
     let neigh=[];
     [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy])=>{
       let ni=cur.i+dx, nj=cur.j+dy;
@@ -365,11 +357,10 @@ function draw(){
   );
 
   drawSmokeParticles();
-
-  drawPlayer(ctx, player.x, player.y, cellSize * 0.9);
+  drawPlayer(ctx, player.x, player.y, cellSize*0.9);
 }
 
-/* ==== Movimento ==== */
+/* ======= MOVIMENTO ======= */
 function canMove(i,j,dir){
   return !grid[j*cols+i].w[dir];
 }
@@ -387,25 +378,28 @@ function move(dir){
   player.y=player.j*cellSize+cellSize/2;
 
   stepsEl.textContent=parseInt(stepsEl.textContent)+1;
+
+  if(player.i===goal.i && player.j===goal.j){
+    new Image().src="/api/ping?finalizou=1";
+    modal.classList.remove("hidden");
+  }
 }
 
-/* ==== Botões ==== */
+/* ======= CONTROLES ======= */
 document.querySelectorAll("[data-dir]").forEach(btn=>{
   const dir=btn.dataset.dir;
   btn.addEventListener("mousedown",()=>move(dir));
   btn.addEventListener("click",()=>move(dir));
 });
 
-/* ==== Jogar novamente ==== */
+/* ======= JOGAR NOVAMENTE ======= */
 document.getElementById("retry").onclick=()=>{
-
-  new Image().src = "/api/ping?again=1";
-
+  new Image().src="/api/ping?again=1";
   modal.classList.add("hidden");
   init();
 };
 
-/* ==== Loop contínuo ==== */
+/* ======= LOOP ======= */
 function loop(){
   spawnSmokeParticle();
   updateSmoke();
@@ -413,9 +407,7 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-function init(){
-  generateMaze();
-}
+function init(){ generateMaze(); }
 
 init();
 loop();
