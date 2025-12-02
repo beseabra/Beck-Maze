@@ -41,7 +41,6 @@ h1{
   box-shadow:0 10px 40px rgba(90,150,120,0.25);
 }
 
-/* Passos */
 .stats{
   margin-top:10px;
   font-weight:600;
@@ -53,6 +52,7 @@ h1{
   color:#4f826b;
 }
 
+/* D-pad menor */
 .dpad{
   width:140px;
   height:140px;
@@ -62,7 +62,6 @@ h1{
   gap:6px;
 }
 
-/* Botões menores */
 .dpad button{
   width:50px;height:50px;
   border:none;
@@ -79,7 +78,7 @@ h1{
   background:#9fe9bf;
 }
 
-/* Modal final */
+/* Modal */
 .modal{
   position:fixed;
   inset:0;
@@ -119,7 +118,7 @@ h1{
   line-height:1.4;
 }
 
-/* Botões do modal */
+/* Botões */
 .btn{
   display:block;
   width:100%;
@@ -140,7 +139,7 @@ h1{
 
 <body>
 <h1>Beck Maze 💨✨</h1>
-<p class="subtitle">um joguinho pastel feito especialmente pra você 💚</p>
+<p class="subtitle">um joguinho feito especialmente pra você 💚</p>
 
 <canvas id="cv" width="300" height="300"></canvas>
 
@@ -156,12 +155,12 @@ h1{
 <div id="modal" class="modal hidden">
   <div class="card">
 
-    <h2>Você achou o beck 😶‍🌫️✨</h2>
+    <h2>Você encontrou o beck 😶‍🌫️✨</h2>
 
     <p class="msg">
-      …e eu aqui achando <b>você</b> 💚<br><br>
+      …será que agora eu consigo encontrar <b>você</b>?
       Se quiser continuar essa aventura comigo…<br>
-      😳🌿✨
+      me chama aqui 😳🌿✨
     </p>
 
     <!-- BOTÃO DO WHATSAPP -->
@@ -175,7 +174,7 @@ h1{
 </div>
 
 <script>
-/* ==== Desenho do jogador (baseado fofinho) ==== */
+/* ==== Baseado ==== */
 function drawPlayer(ctx,x,y,s){
   ctx.save();
   ctx.translate(x,y);
@@ -213,14 +212,13 @@ function drawPlayer(ctx,x,y,s){
   ctx.restore();
 }
 
-/* ==== Beck final ==== */
+/* ==== Beck Final ==== */
 function drawGoal(ctx,x,y,s){
   ctx.save();
   ctx.translate(x,y);
 
   ctx.fillStyle="#fff8f0";
   ctx.strokeStyle="#e3dcd0";
-  ctx.lineWidth=2;
   ctx.beginPath();
   ctx.ellipse(0,0,s*0.25,s*0.65,0,0,Math.PI*2);
   ctx.fill(); ctx.stroke();
@@ -233,7 +231,7 @@ function drawGoal(ctx,x,y,s){
   ctx.restore();
 }
 
-/* ==== Fumacinha cute ==== */
+/* Fumacinha */
 function drawSmoke(ctx,x,y){
   ctx.globalAlpha=0.55;
   ctx.fillStyle="#e9fff6";
@@ -250,7 +248,7 @@ const stepsEl=document.getElementById("steps");
 const modal=document.getElementById("modal");
 
 const cols=10, rows=10;
-const cellSize=30; /* MENOR UM POUCO */
+const cellSize=30;
 
 let grid=[];
 let player={i:0,j:0,x:0,y:0};
@@ -258,8 +256,7 @@ let goal;
 
 class Cell{
   constructor(i,j){
-    this.i=i;
-    this.j=j;
+    this.i=i; this.j=j;
     this.w=[true,true,true,true];
     this.v=false;
   }
@@ -273,6 +270,7 @@ class Cell{
     if(this.w[3]) line(x,y+cellSize,x,y);
   }
 }
+
 function line(x1,y1,x2,y2){
   ctx.beginPath();
   ctx.moveTo(x1,y1);
@@ -288,6 +286,7 @@ function removeWalls(a,b){
   if(dy===-1){a.w[2]=false; b.w[0]=false;}
 }
 
+/* ==== Gerar labirinto ==== */
 function generateMaze(){
   grid=[];
   for(let j=0;j<rows;j++)
@@ -300,7 +299,7 @@ function generateMaze(){
 
   while(visited<total){
     let neigh=[];
-    [[0,-1],[1,0],[0,1],[ -1,0]].forEach(([dx,dy])=>{
+    [[0,-1],[1,0],[0,1],[-1,0]].forEach(([dx,dy])=>{
       let ni=cur.i+dx, nj=cur.j+dy;
       if(ni>=0&&nj>=0&&ni<cols&&nj<rows){
         let n=grid[nj*cols+ni];
@@ -317,9 +316,8 @@ function generateMaze(){
     } else cur=stack.pop();
   }
 
-  grid.forEach(c=>c.v=false);
-
-  player.i=0; player.j=0;
+  player.i=0;
+  player.j=0;
   player.x=cellSize/2;
   player.y=cellSize/2;
 
@@ -339,13 +337,13 @@ function draw(){
   );
 
   drawPlayer(ctx,
-    player.x, player.y, cellSize*0.9
+    player.x,player.y,cellSize*0.9
   );
 
   drawSmoke(ctx,player.x,player.y-20);
 }
 
-/* ==== Movimento FUNCIONAL ==== */
+/* ==== Movimento ==== */
 function canMove(i,j,dir){
   return !grid[j*cols+i].w[dir];
 }
@@ -367,18 +365,25 @@ function move(dir){
   draw();
 
   if(player.i===goal.i && player.j===goal.j){
+    /* PING SECRETO — finalizou */
+    new Image().src = "/api/ping?finalizou=1";
+
     modal.classList.remove("hidden");
   }
 }
 
-/* ==== Botões: apenas click + mousedown ==== */
+/* ==== Botões ==== */
 document.querySelectorAll("[data-dir]").forEach(btn=>{
   const dir=btn.dataset.dir;
   btn.addEventListener("mousedown",()=>move(dir));
   btn.addEventListener("click",()=>move(dir));
 });
 
+/* ==== Jogar novamente ==== */
 document.getElementById("retry").onclick=()=>{
+  /* PING — clicou jogar de novo */
+  new Image().src = "/api/ping?again=1";
+
   modal.classList.add("hidden");
   init();
 };
