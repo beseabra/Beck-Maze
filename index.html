@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Beck Maze 💚✨</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  padding:20px;
+  background:linear-gradient(180deg,#e8fff2,#d9fce9,#c8f7de);
+  font-family:"Poppins",sans-serif;
+  text-align:center;
+  color:#4a7058;
+}
+
+h1{
+  margin:0;
+  font-size:28px;
+  color:#5d9b7e;
+  text-shadow:0 0 8px rgba(180,255,210,0.7);
+  font-family:"Quicksand",sans-serif;
+}
+
+.subtitle{
+  margin-top:6px;
+  color:#7eb49a;
+  font-size:14px;
+}
+
+/* Canvas menor */
+#cv{
+  background:white;
+  border-radius:20px;
+  border:4px solid #c8f3db;
+  display:block;
+  margin:14px auto 0;
+  box-shadow:0 10px 40px rgba(90,150,120,0.25);
+}
+
+/* Passos */
+.stats{
+  margin-top:10px;
+  font-weight:600;
+  padding:6px 14px;
+  font-size:14px;
+  background:#eafff3;
+  border-radius:14px;
+  border:1px solid #c4ebd9;
+  color:#4f826b;
+}
+
+.dpad{
+  width:140px;
+  height:140px;
+  margin:16px auto 0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+
+/* Botões menores */
+.dpad button{
+  width:50px;height:50px;
+  border:none;
+  border-radius:12px;
+  background:#b9f5d1;
+  color:#2d5b46;
+  font-size:20px;
+  box-shadow:0 6px 14px rgba(0,0,0,0.12);
+  transition:0.1s;
+  font-family:"Quicksand",sans-serif;
+}
+.dpad button:active{
+  transform:scale(0.88);
+  background:#9fe9bf;
+}
+
+/* Modal final */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.hidden{display:none;}
+
+.card{
+  background:white;
+  padding:24px;
+  border-radius:20px;
+  width:90%;
+  max-width:360px;
+  border:3px solid #c8f3db;
+  box-shadow:0 12px 38px rgba(50,100,70,0.25);
+  animation:pop .25s ease-out;
+}
+
+@keyframes pop{
+  0%{opacity:0;transform:scale(0.75);}
+  100%{opacity:1;transform:scale(1);}
+}
+
+.card h2{
+  margin:0 0 12px;
+  font-size:22px;
+  color:#4d8869;
+}
+
+.msg{
+  color:#5d9476;
+  font-size:15px;
+  margin-bottom:18px;
+  line-height:1.4;
+}
+
+/* Botões do modal */
+.btn{
+  display:block;
+  width:100%;
+  background:#b0f2c2;
+  border:none;
+  padding:12px;
+  border-radius:14px;
+  margin-top:10px;
+  font-size:16px;
+  font-family:"Quicksand",sans-serif;
+  color:#2f664e;
+}
+.btn:active{
+  transform:scale(0.94);
+}
+</style>
+</head>
+
+<body>
+<h1>Beck Maze 💨✨</h1>
+<p class="subtitle">um joguinho pastel feito especialmente pra você 💚</p>
+
+<canvas id="cv" width="300" height="300"></canvas>
+
+<div class="stats">Passos: <b id="steps">0</b></div>
+
+<div class="dpad">
+  <div></div> <button data-dir="up">▲</button> <div></div>
+  <button data-dir="left">◀</button> <div></div> <button data-dir="right">▶</button>
+  <div></div> <button data-dir="down">▼</button> <div></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal hidden">
+  <div class="card">
+
+    <h2>Você achou o beck 😶‍🌫️✨</h2>
+
+    <p class="msg">
+      …e eu aqui achando <b>você</b> 💚<br><br>
+      Se quiser continuar essa aventura comigo…<br>
+      😳🌿✨
+    </p>
+
+    <!-- BOTÃO DO WHATSAPP -->
+    <a href="https://wa.me/5543999898143" target="_blank" style="text-decoration:none;">
+      <button class="btn" style="background:#98edbc;">📩 Falar comigo no WhatsApp</button>
+    </a>
+
+    <button id="retry" class="btn">Jogar novamente</button>
+
+  </div>
+</div>
+
+<script>
+/* ==== Desenho do jogador (baseado fofinho) ==== */
+function drawPlayer(ctx,x,y,s){
+  ctx.save();
+  ctx.translate(x,y);
+
+  ctx.fillStyle="#fff8f0";
+  ctx.strokeStyle="#dcd4c9";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.ellipse(0,0,s*0.28,s*0.72,0,0,Math.PI*2);
+  ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle="#ffb5a1";
+  ctx.beginPath();
+  ctx.arc(0,-s*0.72,s*0.25,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle="#333";
+  ctx.beginPath();
+  ctx.arc(-s*0.12,-s*0.15,s*0.08,0,Math.PI*2);
+  ctx.arc( s*0.12,-s*0.15,s*0.08,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle="#fff";
+  ctx.beginPath();
+  ctx.arc(-s*0.15,-s*0.20,s*0.035,0,Math.PI*2);
+  ctx.arc( s*0.10,-s*0.20,s*0.035,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle="#333";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.arc(0,0,s*0.17,0,Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+/* ==== Beck final ==== */
+function drawGoal(ctx,x,y,s){
+  ctx.save();
+  ctx.translate(x,y);
+
+  ctx.fillStyle="#fff8f0";
+  ctx.strokeStyle="#e3dcd0";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.ellipse(0,0,s*0.25,s*0.65,0,0,Math.PI*2);
+  ctx.fill(); ctx.stroke();
+
+  ctx.fillStyle="#ffd8c0";
+  ctx.beginPath();
+  ctx.arc(0,-s*0.65,s*0.20,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* ==== Fumacinha cute ==== */
+function drawSmoke(ctx,x,y){
+  ctx.globalAlpha=0.55;
+  ctx.fillStyle="#e9fff6";
+  ctx.beginPath();
+  ctx.arc(x,y,5,0,Math.PI*2);
+  ctx.fill();
+  ctx.globalAlpha=1;
+}
+
+/* ==== Labirinto ==== */
+const cv=document.getElementById("cv");
+const ctx=cv.getContext("2d");
+const stepsEl=document.getElementById("steps");
+const modal=document.getElementById("modal");
+
+const cols=10, rows=10;
+const cellSize=30; /* MENOR UM POUCO */
+
+let grid=[];
+let player={i:0,j:0,x:0,y:0};
+let goal;
+
+class Cell{
+  constructor(i,j){
+    this.i=i;
+    this.j=j;
+    this.w=[true,true,true,true];
+    this.v=false;
+  }
+  draw(){
+    const x=this.i*cellSize, y=this.j*cellSize;
+    ctx.strokeStyle="#cfeee0";
+    ctx.lineWidth=2;
+    if(this.w[0]) line(x,y,x+cellSize,y);
+    if(this.w[1]) line(x+cellSize,y,x+cellSize,y+cellSize);
+    if(this.w[2]) line(x+cellSize,y+cellSize,x,y+cellSize);
+    if(this.w[3]) line(x,y+cellSize,x,y);
+  }
+}
+function line(x1,y1,x2,y2){
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
+}
+
+function removeWalls(a,b){
+  let dx=a.i-b.i, dy=a.j-b.j;
+  if(dx===1){a.w[3]=false; b.w[1]=false;}
+  if(dx===-1){a.w[1]=false; b.w[3]=false;}
+  if(dy===1){a.w[0]=false; b.w[2]=false;}
+  if(dy===-1){a.w[2]=false; b.w[0]=false;}
+}
+
+function generateMaze(){
+  grid=[];
+  for(let j=0;j<rows;j++)
+    for(let i=0;i<cols;i++)
+      grid.push(new Cell(i,j));
+
+  let cur=grid[0];
+  cur.v=true;
+  let stack=[], visited=1, total=cols*rows;
+
+  while(visited<total){
+    let neigh=[];
+    [[0,-1],[1,0],[0,1],[ -1,0]].forEach(([dx,dy])=>{
+      let ni=cur.i+dx, nj=cur.j+dy;
+      if(ni>=0&&nj>=0&&ni<cols&&nj<rows){
+        let n=grid[nj*cols+ni];
+        if(!n.v) neigh.push(n);
+      }
+    });
+
+    if(neigh.length){
+      let next=neigh[Math.floor(Math.random()*neigh.length)];
+      stack.push(cur);
+      removeWalls(cur,next);
+      cur=next; cur.v=true;
+      visited++;
+    } else cur=stack.pop();
+  }
+
+  grid.forEach(c=>c.v=false);
+
+  player.i=0; player.j=0;
+  player.x=cellSize/2;
+  player.y=cellSize/2;
+
+  goal=grid[grid.length-1];
+  stepsEl.textContent=0;
+}
+
+function draw(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+
+  grid.forEach(c=>c.draw());
+
+  drawGoal(ctx,
+    goal.i*cellSize+cellSize/2,
+    goal.j*cellSize+cellSize/2,
+    cellSize*0.9
+  );
+
+  drawPlayer(ctx,
+    player.x, player.y, cellSize*0.9
+  );
+
+  drawSmoke(ctx,player.x,player.y-20);
+}
+
+/* ==== Movimento FUNCIONAL ==== */
+function canMove(i,j,dir){
+  return !grid[j*cols+i].w[dir];
+}
+
+function move(dir){
+  const D={up:0,right:1,down:2,left:3};
+  if(!canMove(player.i,player.j,D[dir])) return;
+
+  if(dir==="up") player.j--;
+  if(dir==="down") player.j++;
+  if(dir==="left") player.i--;
+  if(dir==="right") player.i++;
+
+  player.x=player.i*cellSize+cellSize/2;
+  player.y=player.j*cellSize+cellSize/2;
+
+  stepsEl.textContent=parseInt(stepsEl.textContent)+1;
+
+  draw();
+
+  if(player.i===goal.i && player.j===goal.j){
+    modal.classList.remove("hidden");
+  }
+}
+
+/* ==== Botões: apenas click + mousedown ==== */
+document.querySelectorAll("[data-dir]").forEach(btn=>{
+  const dir=btn.dataset.dir;
+  btn.addEventListener("mousedown",()=>move(dir));
+  btn.addEventListener("click",()=>move(dir));
+});
+
+document.getElementById("retry").onclick=()=>{
+  modal.classList.add("hidden");
+  init();
+};
+
+function init(){
+  generateMaze();
+  draw();
+}
+
+init();
+</script>
+
+</body>
+</html>
